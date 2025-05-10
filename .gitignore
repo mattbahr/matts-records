@@ -1,0 +1,7 @@
+.*_secret
+**/.env
+**/node_modules
+playwright/playwright-report
+playwright/test-results
+**/env.*
+.vscode

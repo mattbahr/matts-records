@@ -1,0 +1,29 @@
+@import "tailwindcss";
+
+@property --bgColor {
+  syntax: '<color>';
+  inherits: false;
+  initial-value: black;
+}
+
+html {
+  background: black;
+}
+
+body {
+  background: linear-gradient(var(--bgColor), black);
+  transition: --bgColor 300ms;
+}
+
+.fade-enter {
+  opacity: 0;
+}
+
+.fade-enter-active {
+  opacity: 1;
+  transition: opacity 300ms;
+}
+
+.fade-done {
+  opacity: 1;
+}
