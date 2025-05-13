@@ -1,10 +1,9 @@
 import App from './app.ts';
+import config from './config/config.ts';
 import { mongoConnect } from './db/connection.ts';
-
-const port = process.env.PORT || 5050;
 
 mongoConnect();
 
-App.listen(port, () => {
-  console.log(`✓ Server listening on port: ${port}`)
+App.listen(config.port, () => {
+  console.log(`✓ Server listening on port: ${config.port}`)
 });

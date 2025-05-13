@@ -14,7 +14,10 @@ export default defineConfig({
     baseURL: process.env.PAGE_URL || 'http://localhost:8080',
     trace: 'on-first-retry',
   },
-
+  timeout: 120_000,
+  expect: {
+    timeout: 30_000
+  },
   projects: [
     {
       name: 'chromium',

@@ -2,28 +2,6 @@ name: random-records-app
 
 services:
 
-  server:
-    build:
-      context: ./server
-      dockerfile: Dockerfile
-    image: random-records-app-server
-    container_name: app-server
-    restart: unless-stopped
-    command: /usr/src/app/node_modules/.bin/nodemon server.ts
-    volumes:
-      - ./server:/usr/src/app
-      - /usr/src/app/node_modules
-    ports:
-      - "5050:5050"
-    secrets:
-      - backblaze_app_key
-      - backblaze_key_id
-      - mongodb_basic_username
-      - mongodb_basic_password
-    depends_on:
-      - mongo
-    env_file: ./server/.env
-
   client:
     build:
       context: ./client
@@ -76,23 +54,45 @@ services:
     depends_on:
       - mongo
 
+  server:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    image: random-records-app-server
+    container_name: app-server
+    restart: unless-stopped
+    command: /usr/src/app/node_modules/.bin/nodemon server.ts
+    volumes:
+      - ./server:/usr/src/app
+      - /usr/src/app/node_modules
+    ports:
+      - "5050:5050"
+    secrets:
+      - backblaze_app_key
+      - backblaze_key_id
+      - mongodb_basic_username
+      - mongodb_basic_password
+    depends_on:
+      - mongo
+    env_file: ./server/.env
+
 secrets:
   backblaze_app_key:
-    file: ./.backblaze_app_key
+    file: ./.backblaze_app_key_secret
   backblaze_key_id:
-    file: ./.backblaze_key_id
+    file: ./.backblaze_key_id_secret
   mongodb_root_username:
-    file: ./.mongodb_root_username
+    file: ./.mongodb_root_username_secret
   mongodb_root_password:
-    file: ./.mongodb_root_password
+    file: ./.mongodb_root_password_secret
   mongodb_basic_username:
-    file: ./.mongodb_basic_username
+    file: ./.mongodb_basic_username_secret
   mongodb_basic_password:
-    file: ./.mongodb_basic_password
+    file: ./.mongodb_basic_password_secret
   mongoexpress_username:
-    file: ./.mongoexpress_username
+    file: ./.mongoexpress_username_secret
   mongoexpress_password:
-    file: ./.mongoexpress_password
+    file: ./.mongoexpress_password_secret
 
 volumes:
   data-volume:

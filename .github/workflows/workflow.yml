@@ -1,0 +1,49 @@
+name: Docker Images CI
+on:
+  push:
+      branches:
+        - main
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    env:
+      B2_AUTH_URI: ${{ vars.B2_AUTH_URI }}
+      BACKBLAZE_APP_KEY: ${{ secrets.BACKBLAZE_APP_KEY }}
+      BACKBLAZE_KEY_ID: ${{ secrets.BACKBLAZE_KEY_ID }}
+      MONGO_INITDB_ROOT_USERNAME: ${{ secrets.MONGODB_ROOT_USERNAME }}
+      MONGO_INITDB_ROOT_PASSWORD: ${{ secrets.MONGODB_ROOT_PASSWORD }}
+      MONGODB_BASIC_USERNAME: ${{ secrets.MONGODB_BASIC_USERNAME }}
+      MONGODB_BASIC_PASSWORD: ${{ secrets.MONGODB_BASIC_PASSWORD }}
+      EXPRESS_HOST: ${{ vars.TEST_RUNNER_EXPRESS_HOST }}
+      EXPRESS_PORT: ${{ vars.TEST_RUNNER_EXPRESS_PORT }}
+    steps:
+      - name: Checkout Git Repository
+        uses: actions/checkout@v4
+      - name: Set Up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
+      - name: Install Playwright Dependencies
+        run: cd playwright && npm ci
+      - name: Install Playwright Browsers
+        run: npx playwright install --with-deps && cd ..
+      - name: Modify Mongo Init Script to Add User
+        run: bash ./scripts/modify_db_init_script.sh
+      - name: Write Server Secrets and Env File
+        run: bash ./scripts/write_server_secrets_env.sh
+      - name: Write Client Env File
+        run: bash ./scripts/write_env_json.sh
+      - name: Start Containers
+        run: docker compose up -d
+      - name: Test Server
+        run: docker exec app-server npm run test:ci
+      - name: Test Client
+        run: docker exec app-client npm test
+      - name: E2E Test
+        run: cd playwright && npx playwright test
+      - uses: actions/upload-artifact@v4
+        if: ${{ !cancelled() }}
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 30
