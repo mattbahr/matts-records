@@ -64,13 +64,13 @@ jobs:
         run: bash ./scripts/write_env_json.sh
       - name: Build Docker Images
         run: docker compose build
-      - name: DigitalOcean Container Registry Login
-        run: docker login registry.digitalocean.com -u mattbahr -p ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
+      - name: Github Container Registry Login
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login -u ${{ github.actor }} --password-stdin ghcr.io
       - name: Tag Express Server Docker Image
-        run: docker tag random-records-app-server registry.digitalocean.com/mattbahr/random-records-app-server:latest
+        run: docker tag random-records-app-server ghcr.io/${{ github.repository_owner}}/random-records-app-server:latest
       - name: Tag React Client Docker Image
-        run: docker tag random-records-app-client registry.digitalocean.com/mattbahr/random-records-app-client:latest
+        run: docker tag random-records-app-client ghcr.io/${{ github.repository_owner}}/random-records-app-client:latest
       - name: Push Express Server Docker Image
-        run: docker push registry.digitalocean.com/mattbahr/random-records-app-server:latest
+        run: docker push ghcr.io/${{ github.repository_owner}}/random-records-app-server:latest
       - name: Push React Client Docker Image
-        run: docker push registry.digitalocean.com/mattbahr/random-records-app-client:latest
+        run: docker push ghcr.io/${{ github.repository_owner}}/random-records-app-client:latest
