@@ -12,7 +12,8 @@ describe('Backblaze integration test', () => {
     await mongoose.disconnect();
   });
 
-  test('all db records should have an image in Backblaze', async () => {
+  // only run when new records are added to the database in production
+  test.skip('all db records should have an image in Backblaze', async () => {
     const records = await Record.find({});
   
     for (const record of records) {

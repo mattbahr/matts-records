@@ -1,21 +1,25 @@
-name: Docker Images CI
+name: Docker Images CI/CD
 on:
   push:
-      branches:
-        - main
+      branches: [ main ]
+permissions:
+  contents: read
+  packages: write
+env:
+  B2_AUTH_URI: ${{ vars.B2_AUTH_URI }}
+  BACKBLAZE_APP_KEY: ${{ secrets.BACKBLAZE_APP_KEY }}
+  BACKBLAZE_KEY_ID: ${{ secrets.BACKBLAZE_KEY_ID }}
+  MONGODB_BASIC_USERNAME: ${{ secrets.MONGODB_BASIC_USERNAME }}
+  MONGODB_BASIC_PASSWORD: ${{ secrets.MONGODB_BASIC_PASSWORD }}
+  EXPRESS_HOST: ${{ vars.TEST_RUNNER_EXPRESS_HOST }}
+  EXPRESS_PORT: ${{ vars.TEST_RUNNER_EXPRESS_PORT }}
 jobs:
   test:
+    name: Test
     runs-on: ubuntu-latest
     env:
-      B2_AUTH_URI: ${{ vars.B2_AUTH_URI }}
-      BACKBLAZE_APP_KEY: ${{ secrets.BACKBLAZE_APP_KEY }}
-      BACKBLAZE_KEY_ID: ${{ secrets.BACKBLAZE_KEY_ID }}
       MONGO_INITDB_ROOT_USERNAME: ${{ secrets.MONGODB_ROOT_USERNAME }}
       MONGO_INITDB_ROOT_PASSWORD: ${{ secrets.MONGODB_ROOT_PASSWORD }}
-      MONGODB_BASIC_USERNAME: ${{ secrets.MONGODB_BASIC_USERNAME }}
-      MONGODB_BASIC_PASSWORD: ${{ secrets.MONGODB_BASIC_PASSWORD }}
-      EXPRESS_HOST: ${{ vars.TEST_RUNNER_EXPRESS_HOST }}
-      EXPRESS_PORT: ${{ vars.TEST_RUNNER_EXPRESS_PORT }}
     steps:
       - name: Checkout Git Repository
         uses: actions/checkout@v4
@@ -47,3 +51,26 @@ jobs:
           name: playwright-report
           path: playwright-report/
           retention-days: 30
+  deploy:
+    name: Deploy
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Git Repository
+        uses: actions/checkout@v4
+      - name: Write Server Secrets and Env File
+        run: bash ./scripts/write_server_secrets_env.sh
+      - name: Write Client Env File
+        run: bash ./scripts/write_env_json.sh
+      - name: Build Docker Images
+        run: docker compose build
+      - name: DigitalOcean Container Registry Login
+        run: docker login registry.digitalocean.com -u mattbahr -p ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
+      - name: Tag Express Server Docker Image
+        run: docker tag random-records-app-server registry.digitalocean.com/mattbahr/random-records-app-server:latest
+      - name: Tag React Client Docker Image
+        run: docker tag random-records-app-client registry.digitalocean.com/mattbahr/random-records-app-client:latest
+      - name: Push Express Server Docker Image
+        run: docker push registry.digitalocean.com/mattbahr/random-records-app-server:latest
+      - name: Push React Client Docker Image
+        run: docker push registry.digitalocean.com/mattbahr/random-records-app-client:latest

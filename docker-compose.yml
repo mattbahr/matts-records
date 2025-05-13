@@ -22,19 +22,6 @@ services:
       - "27017:27017"
     volumes:
       - ./docker-entrypoint-initdb.d/mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
-      - data-volume:/data/db
-
-  mongo-express:
-    image: mongo-express:1.0.2-20-alpine3.19
-    container_name: mongo-express
-    restart: unless-stopped
-    ports:
-      - "8081:8081"
-    environment:
-      ME_CONFIG_MONGODB_SERVER: mongo
-      ME_CONFIG_MONGODB_PORT: 27017
-    depends_on:
-      - mongo
 
   server:
     build:
@@ -49,6 +36,3 @@ services:
       - ./server/secrets:/run/secrets
     depends_on:
       - mongo
-
-volumes:
-  data-volume:
