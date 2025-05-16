@@ -5,3 +5,4 @@ playwright/playwright-report
 playwright/test-results
 **/env.*
 .vscode
+.husky/_

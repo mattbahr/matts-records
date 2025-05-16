@@ -1,7 +1,7 @@
 name: Docker Images CI/CD
 on:
   push:
-      branches: [ main ]
+    branches: [main]
 permissions:
   contents: read
   packages: write
@@ -11,8 +11,6 @@ env:
   BACKBLAZE_KEY_ID: ${{ secrets.BACKBLAZE_KEY_ID }}
   MONGODB_BASIC_USERNAME: ${{ secrets.MONGODB_BASIC_USERNAME }}
   MONGODB_BASIC_PASSWORD: ${{ secrets.MONGODB_BASIC_PASSWORD }}
-  EXPRESS_HOST: ${{ vars.TEST_RUNNER_EXPRESS_HOST }}
-  EXPRESS_PORT: ${{ vars.TEST_RUNNER_EXPRESS_PORT }}
 jobs:
   test:
     name: Test
@@ -20,6 +18,7 @@ jobs:
     env:
       MONGO_INITDB_ROOT_USERNAME: ${{ secrets.MONGODB_ROOT_USERNAME }}
       MONGO_INITDB_ROOT_PASSWORD: ${{ secrets.MONGODB_ROOT_PASSWORD }}
+      EXPRESS_URI: ${{ vars.TEST_RUNNER_EXPRESS_URI }}
     steps:
       - name: Checkout Git Repository
         uses: actions/checkout@v4
@@ -33,16 +32,18 @@ jobs:
         run: npx playwright install --with-deps && cd ..
       - name: Modify Mongo Init Script to Add User
         run: bash ./scripts/modify_db_init_script.sh
-      - name: Write Server Secrets and Env File
-        run: bash ./scripts/write_server_secrets_env.sh
+      - name: Write Server Secrets
+        run: bash ./scripts/write_server_secrets.sh
+      - name: Write Server Env File
+        run: bash ./scripts/write_server_env.sh
       - name: Write Client Env File
         run: bash ./scripts/write_env_json.sh
       - name: Start Containers
-        run: docker compose up -d
+        run: docker compose -f ./docker-compose.ci.yml up -d
       - name: Test Server
         run: docker exec app-server npm run test:ci
       - name: Test Client
-        run: docker exec app-client npm test
+        run: docker exec app-client npm run test:ci
       - name: E2E Test
         run: cd playwright && npx playwright test
       - uses: actions/upload-artifact@v4
@@ -51,15 +52,17 @@ jobs:
           name: playwright-report
           path: playwright-report/
           retention-days: 30
-  deploy:
-    name: Deploy
+  publish:
+    name: Publish
     needs: test
     runs-on: ubuntu-latest
+    env:
+      EXPRESS_URI: ${{ vars.PROD_EXPRESS_URI }}
     steps:
       - name: Checkout Git Repository
         uses: actions/checkout@v4
-      - name: Write Server Secrets and Env File
-        run: bash ./scripts/write_server_secrets_env.sh
+      - name: Write Server Env File
+        run: bash ./scripts/write_server_env.sh
       - name: Write Client Env File
         run: bash ./scripts/write_env_json.sh
       - name: Build Docker Images

@@ -1,7 +1,6 @@
 name: random-records-app
 
 services:
-
   client:
     build:
       context: ./client
@@ -9,6 +8,7 @@ services:
     image: random-records-app-client
     container_name: app-client
     restart: unless-stopped
+    command: npm start
     volumes:
       - ./client:/usr/src/app
       - /usr/src/app/node_modules

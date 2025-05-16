@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 @property --bgColor {
-  syntax: '<color>';
+  syntax: "<color>";
   inherits: false;
   initial-value: black;
 }

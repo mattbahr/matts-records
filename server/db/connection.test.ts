@@ -1,8 +1,8 @@
-import mongoose from 'mongoose';
-import { mongoConnect } from './connection.ts';
-import Record from '../models/record.ts';
+import mongoose from "mongoose";
+import { mongoConnect } from "./connection.ts";
+import Record from "../models/record.ts";
 
-describe('MongoDB connection', () => {
+describe("MongoDB connection", () => {
   beforeAll(async () => {
     await mongoConnect();
   });
@@ -11,7 +11,7 @@ describe('MongoDB connection', () => {
     await mongoose.disconnect();
   });
 
-  test('should successfully connect to the database', async () => {
+  test("should successfully connect to the database", async () => {
     const records = await Record.find({});
     expect(mongoose.connection.readyState).toEqual(1);
   });

@@ -5,4 +5,4 @@ COPY package*.json ./
 RUN npm ci --silent
 COPY . .
 EXPOSE 5050
-CMD ["node", "server.ts"]
+CMD ["npm", "run", "start:prod"]

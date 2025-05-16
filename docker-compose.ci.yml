@@ -7,6 +7,21 @@ services:
       dockerfile: Dockerfile
     image: random-records-app-client
     container_name: app-client
+    restart: unless-stopped
+    command: npm start
+    ports:
+      - "8080:8080"
+    depends_on:
+      - server
+
+  mongo:
+    image: mongo:8.0.9
+    container_name: mongo
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    volumes:
+      - ./docker-entrypoint-initdb.d/mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
 
   server:
     build:
@@ -15,7 +30,10 @@ services:
     image: random-records-app-server
     container_name: app-server
     restart: unless-stopped
+    command: npm start
     ports:
       - "5050:5050"
     volumes:
       - ./server/secrets:/run/secrets
+    depends_on:
+      - mongo

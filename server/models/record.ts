@@ -1,4 +1,4 @@
-import Mongoose from 'mongoose';
+import Mongoose from "mongoose";
 
 const { Schema } = Mongoose;
 
@@ -10,10 +10,10 @@ interface IRecord {
 }
 
 const RecordSchema = new Schema<IRecord>({
-  title: {type: String, required: true},
-  artist: {type: String, required: true},
-  year: {type: Number, required: true},
-  image: {type: String, required: true}
+  title: { type: String, required: true },
+  artist: { type: String, required: true },
+  year: { type: Number, required: true },
+  image: { type: String, required: true },
 });
 
-export default Mongoose.model<IRecord>('Record', RecordSchema);
+export default Mongoose.model<IRecord>("Record", RecordSchema);

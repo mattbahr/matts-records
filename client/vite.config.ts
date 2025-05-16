@@ -1,13 +1,11 @@
-import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react-swc'
-import tailwindcss from '@tailwindcss/vite';
+import { defineConfig } from "vite";
+import react from "@vitejs/plugin-react-swc";
+import tailwindcss from "@tailwindcss/vite";
+import terser from "@rollup/plugin-terser";
 
 export default defineConfig({
-  base: '/',
-  plugins: [
-    react(),
-    tailwindcss()
-  ],
+  base: "/",
+  plugins: [react(), tailwindcss()],
   preview: {
     port: 8080,
     strictPort: true,
@@ -16,6 +14,19 @@ export default defineConfig({
     port: 8080,
     strictPort: true,
     host: true,
-    origin: "http://0.0.0.0:8080"
-  }
-})
+    origin: "http://0.0.0.0:8080",
+    allowedHosts: ["mattsrecords.xyz"],
+  },
+  build: {
+    outDir: "/app/client/dist",
+    emptyOutDir: true,
+    rollupOptions: {
+      input: "index.html",
+      output: {
+        format: "es",
+        dir: "/app/client/dist",
+      },
+      plugins: [terser()],
+    },
+  },
+});

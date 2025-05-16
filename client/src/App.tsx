@@ -1,7 +1,7 @@
-import Record from './components/Record';
+import Record from "./components/Record";
 
 function App() {
-  return <Record />
+  return <Record />;
 }
 
 export default App;

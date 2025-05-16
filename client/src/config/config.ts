@@ -1,13 +1,11 @@
-import envJSON from '../../env.json';
+import envJSON from "../../env.json";
 
 interface Config {
-  expressHost: string;
-  expressPort: number;
+  expressUri: string;
 }
 
 const config: Config = {
-  expressHost: envJSON.EXPRESS_HOST || 'localhost',
-  expressPort: Number(envJSON.EXPRESS_PORT) || 5050
-}
+  expressUri: envJSON.EXPRESS_URI || "localhost",
+};
 
 export default config;
