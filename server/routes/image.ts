@@ -6,9 +6,6 @@ import { getRecordImage } from "../backblaze/b2_client.ts";
 const router = express.Router();
 const logger = pino();
 
-const keyIdSecretPath = "/run/secrets/backblaze_key_id";
-const appKeySecretPath = "/run/secrets/backblaze_app_key";
-
 router.get("/:file", async (req, res) => {
   const file = req.params.file;
 
