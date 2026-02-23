@@ -29,7 +29,6 @@ services:
     restart: unless-stopped
     ports:
       - "6379:6379"
-    command: sh -c "redis-server --requirepass $REDIS_PASSWORD"
     depends_on:
       - mongo
 
