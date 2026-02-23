@@ -1,15 +1,27 @@
 import { extractColors } from "extract-colors";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, JSX } from "react";
 import { CSSTransition } from "react-transition-group";
 import config from "../config/config";
 
-export default function Record() {
-  interface IRecord {
-    title: string;
-    artist: string;
-    year: number;
-  }
+interface IRecord {
+  title: string;
+  artist: string;
+  year: number;
+}
 
+interface Color {
+  red: number;
+  green: number;
+  blue: number;
+  hex?: string;
+  area?: number;
+  hue?: number;
+  saturation?: number;
+  lightness?: number;
+  intensity?: number;
+}
+
+export default function Record(): JSX.Element {
   const [record, setRecord] = useState<IRecord>({
     title: "",
     artist: "",
@@ -39,9 +51,7 @@ export default function Record() {
       const blobUrl = URL.createObjectURL(blob);
       setImageUrl(blobUrl);
 
-      const imgColors = await extractColors(blobUrl).catch(() => {
-        setIsLoaded(true);
-      });
+      const imgColors = (await extractColors(blobUrl)) as Color[];
 
       if (!Array.isArray(imgColors) || imgColors.length === 0) {
         setIsLoaded(true);

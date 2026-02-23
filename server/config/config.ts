@@ -8,6 +8,8 @@ interface Config {
   mongoPort: number;
   b2AuthUri: string;
   b2BucketName: string;
+  redisHost: string;
+  redisPort: number;
 }
 
 const config: Config = {
@@ -16,6 +18,8 @@ const config: Config = {
   mongoPort: Number(process.env.MONGO_PORT) || 27017,
   b2AuthUri: process.env.B2_AUTH_URI || "",
   b2BucketName: process.env.B2_BUCKET_NAME || "my-album-covers",
+  redisHost: process.env.REDIS_HOST || "redis",
+  redisPort: Number(process.env.REDIS_PORT) || 6379
 };
 
 export default config;

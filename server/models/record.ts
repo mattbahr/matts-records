@@ -2,7 +2,7 @@ import Mongoose from "mongoose";
 
 const { Schema } = Mongoose;
 
-interface IRecord {
+export interface IRecord {
   title: string;
   artist: string;
   year: number;

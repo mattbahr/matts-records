@@ -9,25 +9,49 @@ const mockedColorExtractor = colorExtractor as jest.Mocked<
 
 const blob = new Blob(["test"], { type: "text/plain" });
 
-const album = {
+interface IRecord {
+  title: string;
+  artist: string;
+  year: number;
+  image?: string;
+}
+
+interface RecordPayload {
+  record: IRecord;
+}
+
+interface Color {
+  red: number;
+  green: number;
+  blue: number;
+  hex: string;
+  area: number;
+  hue: number;
+  saturation: number;
+  lightness: number;
+  intensity: number;
+}
+
+const album: RecordPayload = {
   record: {
     title: "Daydream Nation",
     artist: "Sonic Youth",
     year: 1988,
+    image: "cover.webp",
   },
 };
 
-const recordResponse = {
+const recordResponse: Partial<Response> & { json: () => Promise<RecordPayload> } = {
   ok: true,
   json: () => Promise.resolve(album),
 };
 
-const imageResponse = {
+const imageResponse: Partial<Response> & { blob: () => Promise<Blob> } = {
   ok: true,
   blob: () => Promise.resolve(blob),
 };
 
-const colors = [
+const colors: Color[] = [
   {
     red: 100,
     green: 101,
@@ -47,12 +71,15 @@ afterEach(() => {
 
 describe("Record component unit tests", () => {
   test("received image and record from fetch calls", async () => {
-    global.fetch = jest
+    const fetchMock = jest
       .fn()
       .mockImplementationOnce(() => Promise.resolve(recordResponse))
-      .mockImplementationOnce(() => Promise.resolve(imageResponse));
+      .mockImplementationOnce(() => Promise.resolve(imageResponse)) as jest.Mock;
 
-    global.URL.createObjectURL = jest.fn(() => "image.webp");
+    global.fetch = fetchMock as unknown as typeof fetch;
+
+    const createObjectURLMock = jest.fn(() => "image.webp");
+    global.URL.createObjectURL = createObjectURLMock as unknown as typeof URL.createObjectURL;
 
     mockedColorExtractor.extractColors.mockResolvedValueOnce(colors);
 
@@ -67,10 +94,12 @@ describe("Record component unit tests", () => {
   });
 
   test("received record but not image from fetch calls", async () => {
-    global.fetch = jest
+    const fetchMock2 = jest
       .fn()
       .mockImplementationOnce(() => Promise.resolve(recordResponse))
-      .mockImplementationOnce(() => Promise.resolve(undefined));
+      .mockImplementationOnce(() => Promise.resolve(undefined)) as jest.Mock;
+
+    global.fetch = fetchMock2 as unknown as typeof fetch;
 
     render(<Record />);
 

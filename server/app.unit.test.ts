@@ -4,7 +4,7 @@ import os from "os";
 import request from "supertest";
 import App from "./app.ts";
 import * as b2Client from "./backblaze/b2_client.ts";
-import Record from "./models/record.ts";
+import Record, * as record from "./models/record.ts";
 
 jest.mock("./models/record.ts");
 jest.mock("./backblaze/b2_client.ts");
@@ -12,7 +12,7 @@ jest.mock("./backblaze/b2_client.ts");
 const mockedB2Client = b2Client as jest.Mocked<typeof b2Client>;
 const mockedRecord = Record as jest.Mocked<typeof Record>;
 
-const mockedAlbums = [
+const mockedAlbums: record.IRecord[] = [
   {
     title: "Smooch",
     artist: "Jeuje",
@@ -58,7 +58,7 @@ describe("Image router unit tests", () => {
   });
 
   test("should return 404 on failure to retrieve file stream", async () => {
-    mockedB2Client.getRecordImage.mockResolvedValue("");
+    mockedB2Client.getRecordImage.mockResolvedValue(undefined);
     const res = await request(App).get("/image/smooch.webp");
     expect(res.statusCode).toEqual(404);
   });

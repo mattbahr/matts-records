@@ -1,60 +1,77 @@
-import axios from "axios";
+import axios, { type AxiosResponse } from "axios";
+import http from "http";
+import https from "https";
 import fs from "fs";
 import pino from "pino";
 import config from "../config/config.ts";
+import type { Readable } from "stream";
 
-const logger = pino();
+const logger: pino.Logger = pino();
 
-const keyId = fs.readFileSync("/run/secrets/backblaze_key_id", "utf8").trim();
-const applicationKey = fs
+const keyId: string = fs.readFileSync("/run/secrets/backblaze_key_id", "utf8").trim();
+const applicationKey: string = fs
   .readFileSync("/run/secrets/backblaze_app_key", "utf8")
   .trim();
 
-export const getRecordImage = async (file: string) => {
+interface B2AuthData {
+  authorizationToken?: string;
+  apiInfo?: {
+    storageApi?: {
+      downloadUrl?: string;
+    };
+  };
+}
+
+export const getRecordImage = async (
+  file: string
+): Promise<Readable | undefined> => {
   logger.info(`${new Date().toISOString()} - Authenticating with Backblaze.`);
 
-  const authResponse = await axios
-    .get(config.b2AuthUri, {
+  let authResponse: AxiosResponse<B2AuthData> | undefined;
+
+  try {
+    authResponse = await axios.get<B2AuthData>(config.b2AuthUri, {
       auth: {
         username: keyId,
         password: applicationKey,
       },
-    })
-    .catch(err => {
-      logger.error(`${new Date().toISOString()} - Failed to authenticate with Backblaze: ${err}`);
+      // ask the remote server to close the connection and don't reuse sockets
+      headers: { Connection: "close" },
+      httpAgent: new http.Agent({ keepAlive: false }),
+      httpsAgent: new https.Agent({ keepAlive: false }),
     });
+  } catch (err: unknown) {
+    logger.error(`${new Date().toISOString()} - Failed to authenticate with Backblaze: ${String(err)}`);
+    authResponse = undefined;
+  }
 
-  if (
-    !(
-      authResponse?.data?.authorizationToken &&
-      authResponse?.data?.apiInfo?.storageApi?.downloadUrl
-    )
-  ) {
+  const authorizationToken = authResponse?.data?.authorizationToken;
+  const downloadUrl = authResponse?.data?.apiInfo?.storageApi?.downloadUrl;
+
+  if (!authorizationToken || !downloadUrl) {
     return;
   }
 
   logger.info(`${new Date().toISOString()} - Backblaze authentication successful.`);
 
-  const {
-    authorizationToken,
-    apiInfo: {
-      storageApi: { downloadUrl },
-    },
-  } = authResponse.data;
   const fullDownloadPath = `${downloadUrl}/file/${config.b2BucketName}/${file}`;
 
-  const fileResponse = await axios
-    .get(fullDownloadPath, {
-      headers: { Authorization: authorizationToken },
+  let fileResponse: AxiosResponse<Readable> | undefined;
+  try {
+    fileResponse = await axios.get<Readable>(fullDownloadPath, {
       responseType: "stream",
-    })
-    .catch(err => {
-      logger.error(`${new Date().toISOString()} - Failed to retrieve image from Backblaze: ${err}`);
+      headers: { Authorization: authorizationToken, Connection: "close" },
+      httpAgent: new http.Agent({ keepAlive: false }),
+      httpsAgent: new https.Agent({ keepAlive: false }),
     });
+  } catch (err: unknown) {
+    logger.error(`${new Date().toISOString()} - Failed to retrieve image from Backblaze: ${String(err)}`);
+    fileResponse = undefined;
+  }
 
   if (!fileResponse?.data) {
     return;
   }
 
-  return fileResponse.data;
+  return fileResponse.data as Readable;
 };

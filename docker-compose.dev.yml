@@ -33,24 +33,15 @@ services:
       - ./docker-entrypoint-initdb.d/mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
       - data-volume:/data/db
 
-  mongo-express:
-    image: mongo-express:1.0.2-20-alpine3.19
-    container_name: mongo-express
+  redis:
+    image: redis:8.2.4-alpine
+    container_name: redis
     restart: unless-stopped
-    ports:
-      - "8081:8081"
-    environment:
-      ME_CONFIG_BASICAUTH_USERNAME_FILE: /run/secrets/mongoexpress_username
-      ME_CONFIG_BASICAUTH_PASSWORD_FILE: /run/secrets/mongoexpress_password
-      ME_CONFIG_MONGODB_ADMINUSERNAME_FILE: /run/secrets/mongodb_root_username
-      ME_CONFIG_MONGODB_ADMINPASSWORD_FILE: /run/secrets/mongodb_root_password
-      ME_CONFIG_MONGODB_SERVER: mongo
-      ME_CONFIG_MONGODB_PORT: 27017
+    ports: 
+      - "6379:6379"
+    command: sh -c "redis-server --requirepass $(cat /run/secrets/redis_password)"
     secrets:
-      - mongoexpress_username
-      - mongoexpress_password
-      - mongodb_root_username
-      - mongodb_root_password
+      - redis_password
     depends_on:
       - mongo
 
@@ -72,8 +63,9 @@ services:
       - backblaze_key_id
       - mongodb_basic_username
       - mongodb_basic_password
+      - redis_password
     depends_on:
-      - mongo
+      - redis
     env_file: ./server/.env
 
 secrets:
@@ -89,10 +81,8 @@ secrets:
     file: ./.mongodb_basic_username_secret
   mongodb_basic_password:
     file: ./.mongodb_basic_password_secret
-  mongoexpress_username:
-    file: ./.mongoexpress_username_secret
-  mongoexpress_password:
-    file: ./.mongoexpress_password_secret
+  redis_password:
+    file: ./.redis_password_secret
 
 volumes:
   data-volume:

@@ -23,6 +23,16 @@ services:
     volumes:
       - ./docker-entrypoint-initdb.d/mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
 
+  redis:
+    image: redis:8.2.4-alpine
+    container_name: redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    command: sh -c "redis-server --requirepass $REDIS_PASSWORD"
+    depends_on:
+      - mongo
+
   server:
     build:
       context: ./server
@@ -36,4 +46,4 @@ services:
     volumes:
       - ./server/secrets:/run/secrets
     depends_on:
-      - mongo
+      - redis
