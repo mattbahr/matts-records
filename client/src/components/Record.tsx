@@ -34,14 +34,43 @@ export default function Record(): JSX.Element {
 
   useEffect(() => {
     async function fetchImage(file: string) {
-      const response = await fetch(`${config.expressUri}/image/${file}`);
+      const cacheName: string = 'record-images-cache-v1';
+      let blob: Blob | null = null;
 
-      if (!response?.ok) {
+      try {
+        const cache: Cache = await window.caches.open(cacheName);
+        const cachedResponse: Response | undefined = await cache.match(file);
+
+        if (cachedResponse?.ok) {
+          blob = await cachedResponse.blob();
+        } else {
+          const response: Response | undefined = await fetch(`${config.expressUri}/image/${file}`);
+
+          if (!response?.ok) {
+            setIsLoaded(true);
+            return;
+          }
+
+          blob = await response.blob();
+
+          console.log('fetched blob from network');
+
+          const responseToCache: Response = new Response(blob, {
+            status: 200,
+            statusText: 'OK',
+            headers: { 'Content-Type': blob.type }
+          });
+
+          console.log('caching response');
+
+          await cache.put(file, responseToCache);
+
+          console.log('response cached');
+        }
+      } catch (err) {
         setIsLoaded(true);
         return;
       }
-
-      const blob = await response.blob();
 
       if (!blob) {
         setIsLoaded(true);

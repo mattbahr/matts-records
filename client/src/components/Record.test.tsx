@@ -41,7 +41,9 @@ const album: RecordPayload = {
   },
 };
 
-const recordResponse: Partial<Response> & { json: () => Promise<RecordPayload> } = {
+const recordResponse: Partial<Response> & {
+  json: () => Promise<RecordPayload>;
+} = {
   ok: true,
   json: () => Promise.resolve(album),
 };
@@ -70,19 +72,50 @@ afterEach(() => {
 });
 
 describe("Record component unit tests", () => {
-  test("received image and record from fetch calls", async () => {
+  test("received image and record from fetch calls (cache miss and cache hit)", async () => {
     const fetchMock = jest
       .fn()
       .mockImplementationOnce(() => Promise.resolve(recordResponse))
-      .mockImplementationOnce(() => Promise.resolve(imageResponse)) as jest.Mock;
+      .mockImplementationOnce(() =>
+        Promise.resolve(imageResponse),
+      ) as jest.Mock;
 
     global.fetch = fetchMock as unknown as typeof fetch;
 
-    const createObjectURLMock = jest.fn(() => "image.webp");
-    global.URL.createObjectURL = createObjectURLMock as unknown as typeof URL.createObjectURL;
+    const createObjectURLMock = jest.fn(() => "image.webp") as jest.Mock;
+
+    global.URL.createObjectURL =
+      createObjectURLMock as unknown as typeof URL.createObjectURL;
 
     mockedColorExtractor.extractColors.mockResolvedValueOnce(colors);
 
+    const cachePutMock = jest.fn() as jest.Mock;
+    
+    const cacheMatchMock = jest.fn()
+        .mockImplementationOnce(() => Promise.resolve(undefined))
+        .mockImplementationOnce(() => Promise.resolve(imageResponse)) as jest.Mock;
+
+    const cacheOpenMock = jest.fn(() =>
+      Promise.resolve({
+        match: cacheMatchMock,
+        put: cachePutMock,
+      }),
+    ) as jest.Mock;
+
+    Object.defineProperty(window, "caches", {
+      value: { open: cacheOpenMock },
+      writable: true,
+    });
+
+    render(<Record />);
+
+    await waitFor(() => {
+      expect(screen.getByText(album.record.title)).toBeInTheDocument();
+      expect(screen.getByText(album.record.artist)).toBeInTheDocument();
+      expect(screen.getByText(album.record.year)).toBeInTheDocument();
+      expect(screen.getByAltText("Album cover")).toBeInTheDocument();
+    });
+    
     render(<Record />);
 
     await waitFor(() => {
