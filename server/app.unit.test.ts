@@ -1,7 +1,7 @@
 import fs from "fs";
 import path from "path";
 import os from "os";
-import request from "supertest";
+import request, { Response } from "supertest";
 import App from "./app.ts";
 import * as b2Client from "./backblaze/b2_client.ts";
 import Record, * as record from "./models/record.ts";
@@ -28,13 +28,13 @@ afterEach(() => {
 describe("Record router unit tests", () => {
   test("should return 404 on failure to retrieve record", async () => {
     mockedRecord.find.mockResolvedValue([]);
-    const res = await request(App).get("/record");
+    const res: Response = await request(App).get("/record");
     expect(res.statusCode).toEqual(404);
   });
 
   test("should return record on successful retrieval", async () => {
     mockedRecord.find.mockResolvedValue(mockedAlbums);
-    const res = await request(App).get("/record");
+    const res: Response = await request(App).get("/record");
     expect(res.statusCode).toEqual(200);
     expect(res.body.record.title).toEqual("Smooch");
     expect(res.body.record.artist).toEqual("Jeuje");
@@ -59,14 +59,14 @@ describe("Image router unit tests", () => {
 
   test("should return 404 on failure to retrieve file stream", async () => {
     mockedB2Client.getRecordImage.mockResolvedValue(undefined);
-    const res = await request(App).get("/image/smooch.webp");
+    const res: Response = await request(App).get("/image/smooch.webp");
     expect(res.statusCode).toEqual(404);
   });
 
   test("should return 200 on successful file stream retrieval", async () => {
     const stream = fs.createReadStream(tempFilePath);
     mockedB2Client.getRecordImage.mockResolvedValue(stream);
-    const res = await request(App).get("/image/smooch.webp");
+    const res: Response = await request(App).get("/image/smooch.webp");
     expect(res.statusCode).toEqual(200);
   });
 });
